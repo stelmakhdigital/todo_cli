@@ -1,74 +1,55 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"time"
+	"todo_cli/internal/manager"
+
+	"github.com/labstack/gommon/log"
 )
-
-var (
-	ErrInvalidStatus = errors.New("некорректный статус")
-	ErrInvalidID     = errors.New("некорректный ID")
-	ErrTaskNotFound  = errors.New("задача не найдена")
-)
-
-// type-alias
-type Status string
-
-const (
-	StatusPending   Status = "pending"
-	StatusProgress  Status = "in_progress"
-	StatusCompleted Status = "completed"
-)
-
-// теги структур json или yaml задаются через тильда кавычки
-// omitempty - пропустить если нету значения
-// "-" - исключить вообще
-type Task struct {
-	ID          int        `json:"id"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	Status      Status     `json:"status"`
-	CreatedAt   time.Time  `json:"created,omitempty"`
-	CompletedAt *time.Time `json:"completed,omitempty"`
-}
-
-// это метод - функция с получателем (receiver)
-// реализует интерфейс для вывода значения с преобразованием типов
-// fmt.PrintLn(StatusPending) вызовет StatusPending.String() и выведет "pending"
-func (status Status) String() string {
-	return string(status)
-}
-
-func (status Status) Valid() bool {
-	switch status {
-	case StatusPending, StatusProgress, StatusCompleted:
-		return true
-	}
-	return false
-}
-
-// конструктор указывается через New префикс. У конструктора нет именованных аргументов
-// %w позволяет обернуть ошибку для error.Is() проверки
-func NewTask(id int, title, description, status string) (Task, error) {
-	if !Status(status).Valid() {
-		return Task{}, fmt.Errorf("%w: %s", ErrInvalidStatus, status)
-	}
-	return Task{
-		ID:          id,
-		Title:       title,
-		Description: description,
-		Status:      Status(status),
-		CreatedAt:   time.Now(),
-	}, nil
-}
 
 func main() {
-	fmt.Println("Hello")
-	fmt.Println("Time: ", time.Now().Format("02.01.2006 15:05"))
-	tsk, err := NewTask(1, "test", "dest", "pending")
+	// var slice_t []*task.Task
+	// // Создаём задачу через конструктор
+	// t1, err := task.NewTask(1, "Купить молоко", "Зайти в магазин", string(task.StatusPending))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// slice_t = append(slice_t, t1)
+
+	// t2, err := task.NewTask(2, "Купить молоко 2 - тестироваине строки на максимальное кол-во символов", "Зайти в магазин", string(task.StatusCompleted))
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// slice_t = append(slice_t, t2)
+
+	// t3, _ := task.NewTask(3, "Купить молоко 3", "Зайти в магазин 3", string(task.StatusPending))
+
+	// slice_t = append(slice_t, t3)
+
+	// taskToString, _ := storage.DataToJson(&slice_t)
+	// storage.Save(taskToString)
+
+	// stringToTasks, _ := storage.Load()
+
+	// var task []*task.Task
+	// storage.JsonToData(stringToTasks, &task)
+	// fmt.Printf("String %v", task)
+
+	// fmt.Printf("%-4s | %-70s | %-12s | %-15s\n", "ID", "Название", "Статус", "Создана")
+	// fmt.Println(strings.Repeat("-", 111))
+	// for _, value := range task {
+	// 	// fmt.Printf("Задача #%d: %s (статус: %s)\n", value.ID, value.Title, value.Status)
+
+	// 	// %-4s - строка, выравнивание влево, ширина 4 символа
+	// 	// %-20s - строка, ширина 20 символов
+	// 	// %d - число, %-12s - строка
+
+	// 	fmt.Printf("%-4d | %-70s | %-12s | %-15s\n", value.ID, value.Title, value.Status, value.CreatedAt.Format("02.01.2006"))
+	// }
+
+	allTasks, err := manager.GetAll()
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
-	fmt.Println(tsk)
+	manager.Render(allTasks)
 }

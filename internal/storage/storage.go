@@ -23,9 +23,13 @@ const (
 
 type Storage interface {
 	Save(tasks []byte) error
-	// Load() ([]byte, error)
+	Load() ([]byte, error)
 }
 
 func Save(tasks []byte) error {
 	return os.WriteFile(fileName, tasks, fileMode644)
+}
+
+func Load() ([]byte, error) {
+	return os.ReadFile(fileName)
 }
