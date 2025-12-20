@@ -46,39 +46,28 @@ func hasKeys(data map[string]string, keys ...string) bool {
 	return true
 }
 
-func editTask(m *Manager, id int, data map[string]string) error {
-	tasks, err := m.store.Load()
-	if err != nil {
-		return fmt.Errorf("ошибка при получении: %w", err)
-	}
+func editTask(m *Manager, tasks []*task.Task, id int, data map[string]string) (*int, error) {
 	indexTask := m.filter.GetIndexByID(tasks, id)
-
 	if indexTask == nil {
-		fmt.Printf("задачи с #%d не существует...\n", id)
-		return fmt.Errorf("не найдена задача с #%d", id)
+		return nil, fmt.Errorf("не найдена задача с #%d", id)
 	}
-
 	if title, ok := data["title"]; ok {
 		tasks[*indexTask].Title = title
 	}
-
 	if description, ok := data["description"]; ok {
 		tasks[*indexTask].Description = description
 	}
-
 	if status, ok := data["status"]; ok {
 		if !task.Status(string(status)).Valid() {
-			return fmt.Errorf("неверный статус задачи: %v", status)
+			return nil, fmt.Errorf("неверный статус задачи: %v", status)
 		}
 		tasks[*indexTask].Status = task.Status(status)
 	}
-
-	err = m.store.Save(tasks, nil)
+	err := m.store.Save(tasks, nil)
 	if err != nil {
-		return fmt.Errorf("ошибка при записи: %w", err)
+		return nil, fmt.Errorf("ошибка при записи: %w", err)
 	}
-
-	return nil
+	return indexTask, nil
 }
 
 func (m *Manager) Create(data map[string]string) (*int, error) {
@@ -94,27 +83,30 @@ func (m *Manager) Create(data map[string]string) (*int, error) {
 	}
 	idTask += 1
 
-	if hasKeys(data, "Title", "Description") {
-		newTask, err := task.NewTask(idTask, data["Title"], data["Description"], task.StatusPending.String())
+	if hasKeys(data, "title", "description") {
+		newTask, err := task.NewTask(idTask, data["title"], data["description"], task.StatusPending.String())
 		if err != nil {
 			return nil, fmt.Errorf("ошибка при создании задачи: %w", err)
 		}
 		tasks = append(tasks, newTask)
 		m.store.Save(tasks, nil)
-		fmt.Printf("Задача #%d добавлена успешно\n", idTask)
+		render.RenderDetailed(newTask)
 		return &idTask, nil
 	}
-
 	return nil, fmt.Errorf("получены некорректные данные при создании задачи: %v", data)
-
 }
 
 func (m *Manager) Start(id int) error {
 	data := map[string]string{"status": task.StatusProgress.String()}
-	err := editTask(m, id, data)
+	tasks, err := m.store.Load()
+	if err != nil {
+		return fmt.Errorf("ошибка при получении: %w", err)
+	}
+	indexTask, err := editTask(m, tasks, id, data)
 	if err != nil {
 		return fmt.Errorf("не удалось создать задачу: %w", err)
 	}
+	render.RenderDetailed(tasks[*indexTask])
 	return nil
 }
 
@@ -123,18 +115,28 @@ func (m *Manager) Start(id int) error {
 // Менеджер: [Manager](#Manager)
 func (m *Manager) Complete(id int) error {
 	data := map[string]string{"status": task.StatusCompleted.String()}
-	err := editTask(m, id, data)
+	tasks, err := m.store.Load()
+	if err != nil {
+		return fmt.Errorf("ошибка при получении: %w", err)
+	}
+	indexTask, err := editTask(m, tasks, id, data)
 	if err != nil {
 		return fmt.Errorf("не удалось завершить задачу: %w", err)
 	}
+	render.RenderDetailed(tasks[*indexTask])
 	return nil
 }
 
 func (m *Manager) Edit(id int, data map[string]string) error {
-	err := editTask(m, id, data)
+	tasks, err := m.store.Load()
+	if err != nil {
+		return fmt.Errorf("ошибка при получении: %w", err)
+	}
+	indexTask, err := editTask(m, tasks, id, data)
 	if err != nil {
 		return fmt.Errorf("не удалось отредактировать задачу: %w", err)
 	}
+	render.RenderDetailed(tasks[*indexTask])
 	return nil
 }
 
@@ -146,7 +148,6 @@ func (m *Manager) Delete(id int) error {
 	indexTask := m.filter.GetIndexByID(tasks, id)
 
 	if indexTask == nil {
-		fmt.Printf("задачи с #%d не существует...\n", id)
 		return fmt.Errorf("не найдена задача с #%d", id)
 	}
 
@@ -169,15 +170,10 @@ func (m *Manager) Show(id int) error {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
 	indexTask := m.filter.GetIndexByID(tasks, id)
-
 	if indexTask == nil {
-		fmt.Printf("задачи с #%d не существует...\n", id)
 		return fmt.Errorf("не найдена задача с #%d", id)
 	}
-
-	task := tasks[*indexTask]
-	render.RenderOne(task)
-
+	render.RenderDetailed(tasks[*indexTask])
 	return nil
 }
 
@@ -221,7 +217,7 @@ func (m *Manager) Search(word string) error {
 	if len(foundTasks) >= 1 {
 		render.RenderList(foundTasks)
 	} else {
-		fmt.Printf("задачи по фразе %s - не найдены\n", word)
+		return fmt.Errorf("задачи по фразе %s - не найдены", word)
 	}
 	return nil
 }
