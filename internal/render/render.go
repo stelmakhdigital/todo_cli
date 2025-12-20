@@ -15,6 +15,7 @@ func RenderList(tasks []*task.Task) {
 		}
 	}
 	columnMax += 5
+	fmt.Print("\n")
 	fmt.Printf("%-4s | %-*s | %-12s | %-15s\n", "ID", columnMax, "Название", "Статус", "Создана")
 	fmt.Println(strings.Repeat("-", columnMax+40))
 
@@ -23,12 +24,28 @@ func RenderList(tasks []*task.Task) {
 			task.ID, columnMax, task.Title, task.Status,
 			task.CreatedAt.Format("02.01.2006"))
 	}
+	fmt.Print("\n")
+}
+
+func RenderMap(data map[string]interface{}) {
+	fmt.Print("\n")
+	for name, value := range data {
+		if stringValue, ok := value.(string); ok {
+			fmt.Printf("%v: %v\n", name, stringValue)
+		}
+		if intValue, ok := value.(int); ok {
+			fmt.Printf("%v: %v\n", name, intValue)
+		}
+	}
+	fmt.Print("\n")
 }
 
 func RenderOne(tasks *task.Task) {
+	fmt.Print("\n")
 	fmt.Printf("ID: %d\n", tasks.ID)
 	fmt.Printf("Название: %s\n", tasks.Title)
 	fmt.Printf("Описание: %s\n", tasks.Description)
 	fmt.Printf("Статус: %s\n", tasks.Status.String())
 	fmt.Printf("Создана: %s\n", tasks.CreatedAt.Format("02.01.2006 15:04"))
+	fmt.Print("\n")
 }
