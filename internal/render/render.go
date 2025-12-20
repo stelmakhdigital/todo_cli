@@ -40,7 +40,7 @@ func RenderMap(data map[string]interface{}) {
 	fmt.Print("\n")
 }
 
-func RenderOne(tasks *task.Task) {
+func RenderDetailed(tasks *task.Task) {
 	fmt.Print("\n")
 	fmt.Printf("ID: %d\n", tasks.ID)
 	fmt.Printf("Название: %s\n", tasks.Title)
