@@ -13,11 +13,14 @@ type Storage interface {
 
 type ManagerTasks interface {
 	Show(id int) error
+	List(status task.Status) error
 	Create(data map[string]string) (*int, error)
 	Edit(id int, data map[string]string) error
 	Start(id int) error
 	Complete(id int) error
 	Delete(id int) error
+	Stats() error
+	Search(word string) error
 }
 
 // добавим зависимость для использования во внутренних методах
@@ -175,5 +178,50 @@ func (m *Manager) Show(id int) error {
 	task := tasks[*indexTask]
 	render.RenderOne(task)
 
+	return nil
+}
+
+func (m *Manager) List(status string) error {
+	tasks, err := m.store.Load()
+	if err != nil {
+		return fmt.Errorf("ошибка при получении: %w", err)
+	}
+	if status == "all" {
+		render.RenderList(tasks)
+	} else {
+		if !task.Status(status).Valid() {
+			return fmt.Errorf("передан некорректный статус для фильтрации: %s", status)
+		}
+		tasksFiltered, err := m.filter.GetTasksByStatus(tasks, task.Status(status))
+		if err != nil {
+			return fmt.Errorf("ошибка при фильтрации задач: %w", err)
+		}
+		render.RenderList(tasksFiltered)
+	}
+	return nil
+}
+
+func (m *Manager) Stats() error {
+	tasks, err := m.store.Load()
+	if err != nil {
+		return fmt.Errorf("ошибка при получении: %w", err)
+	}
+	data := m.filter.GetStatsTasksByStatus(tasks)
+	render.RenderMap(data)
+	return nil
+}
+
+func (m *Manager) Search(word string) error {
+	tasks, err := m.store.Load()
+	if err != nil {
+		return fmt.Errorf("ошибка при получении: %w", err)
+	}
+	foundTasks := m.filter.GetTasksBySearchWord(tasks, word)
+
+	if len(foundTasks) >= 1 {
+		render.RenderList(foundTasks)
+	} else {
+		fmt.Printf("задачи по фразе %s - не найдены\n", word)
+	}
 	return nil
 }
