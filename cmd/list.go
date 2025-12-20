@@ -12,15 +12,16 @@ var status string
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "Просмотр всех задач или списка задач по статусу",
-	Long: `
+	Short: "Просмотр всех задач или фильтрация по статусу",
+	Long: `Отображает список задач с возможностью фильтрации по статусу.
 
-Показывает список всех задач.
-Если передать в аргумент статус (допускается pending|in_progress|completed) то выведет только задачи с этим статусом
+По умолчанию показывает все задачи. Используйте флаг --status для фильтрации.
+Доступные статусы: pending, in_progress, completed.
 
-Пример:
-
-todo list --status completed
+Примеры:
+  todo list
+  todo list --status completed
+  todo list -s in_progress
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		store := &storage.FileStorage{}

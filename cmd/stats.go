@@ -11,13 +11,13 @@ import (
 var statsCmd = &cobra.Command{
 	Use:   "stats",
 	Short: "Просмотр статистики по задачам",
-	Long: `
+	Long: `Отображает статистику по всем задачам в разбивке по статусам.
 
-Показывает короткую статистику по задачам в разрезе их статуса и общее количество задач.
+Показывает общее количество задач и количество задач для каждого статуса:
+pending (ожидает), in_progress (в работе), completed (выполнено).
 
-Пример:
-
-todo stats
+Примеры:
+  todo stats
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		store := &storage.FileStorage{}
