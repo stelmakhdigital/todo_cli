@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"todo_cli/internal/manager"
-	"todo_cli/internal/storage"
 
 	"github.com/spf13/cobra"
 )
@@ -24,9 +22,6 @@ var listCmd = &cobra.Command{
   todo list -s in_progress
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		store := &storage.FileStorage{}
-		filter := &manager.FilterTasks{}
-		mgr := manager.NewManager(store, filter)
 		err := mgr.List(status)
 		if err != nil {
 			fmt.Printf("%v\n", err)

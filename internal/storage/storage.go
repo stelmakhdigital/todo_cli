@@ -25,23 +25,41 @@ const (
 
 type FileStorage struct{}
 
+func checkExistsFile(fileName string) error {
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		emptyTasks := []byte("[]")
+		return os.WriteFile(fileName, emptyTasks, fileMode644)
+	}
+	return nil
+}
+
 func (fs *FileStorage) Save(tasks []*task.Task, newFileName *string) error {
 	choiceNameFile := fileName
 	if newFileName != nil {
 		choiceNameFile = *newFileName
 	}
-
+	err := checkExistsFile(choiceNameFile)
+	if err != nil {
+		return err
+	}
 	taskToString, err := DataToJson(&tasks)
 	if err != nil {
 		return fmt.Errorf("ошибка при преобразовании задачи: %w", err)
 	}
-
 	return os.WriteFile(choiceNameFile, taskToString, fileMode644)
 }
 
-func (fs *FileStorage) Load() ([]*task.Task, error) {
+func (fs *FileStorage) Load(differentFileName *string) ([]*task.Task, error) {
 	var tasks []*task.Task
-
+	choiceNameFile := fileName
+	if differentFileName != nil {
+		choiceNameFile = *differentFileName
+	}
+	err := checkExistsFile(choiceNameFile)
+	if err != nil {
+		return nil, err
+	}
 	stringToTasks, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось загрузить задачи: %w", err)
@@ -51,4 +69,12 @@ func (fs *FileStorage) Load() ([]*task.Task, error) {
 		return nil, fmt.Errorf("не удалось преобразовать задачи: %w", err)
 	}
 	return tasks, nil
+}
+
+func (fs *FileStorage) Clear(differentFileName *string) error {
+	choiceNameFile := fileName
+	if differentFileName != nil {
+		choiceNameFile = *differentFileName
+	}
+	return os.Remove(choiceNameFile)
 }

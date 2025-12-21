@@ -3,8 +3,6 @@ package cmd
 import (
 	"fmt"
 	"strconv"
-	"todo_cli/internal/manager"
-	"todo_cli/internal/storage"
 
 	"github.com/spf13/cobra"
 )
@@ -30,9 +28,6 @@ var editCmd = &cobra.Command{
 		cobra.MinimumNArgs(1),
 	),
 	Run: func(cmd *cobra.Command, args []string) {
-		store := &storage.FileStorage{}
-		filter := &manager.FilterTasks{}
-		mgr := manager.NewManager(store, filter)
 		if title == "" && description == "" {
 			fmt.Print("укажите значение для изменения заголовка или описания задачи\n")
 			return

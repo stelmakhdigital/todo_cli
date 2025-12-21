@@ -2,9 +2,15 @@ package cmd
 
 import (
 	"os"
+	"todo_cli/internal/manager"
+	"todo_cli/internal/render"
+	"todo_cli/internal/storage"
 
 	"github.com/spf13/cobra"
 )
+
+// глобальный менеджер для использования в командах
+var mgr *manager.Manager
 
 // rootCmd показывает базовую команду (тут только описание тк не указан Run) если команда передана без аргументов
 var rootCmd = &cobra.Command{
@@ -27,6 +33,10 @@ func Execute() {
 }
 
 func init() {
+	store := &storage.FileStorage{}
+	filter := &manager.FilterTasks{}
+	render := &render.TerminalRender{}
+	mgr = manager.NewManager(store, filter, render)
 	cobra.AddTemplateFunc("tr", translate)
 	rootCmd.SetUsageTemplate(usageTemplate)
 }

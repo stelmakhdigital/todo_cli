@@ -7,7 +7,15 @@ import (
 	"unicode/utf8"
 )
 
-func RenderList(tasks []*task.Task) {
+type Render interface {
+	RenderList(tasks []*task.Task)
+	RenderMap(data map[string]interface{})
+	RenderDetailed(tasks *task.Task)
+}
+
+type TerminalRender struct{}
+
+func (r *TerminalRender) RenderList(tasks []*task.Task) {
 	var columnMax int = 0
 	for _, value := range tasks {
 		if columnMax < utf8.RuneCountInString(value.Title) {
@@ -27,7 +35,7 @@ func RenderList(tasks []*task.Task) {
 	fmt.Print("\n")
 }
 
-func RenderMap(data map[string]interface{}) {
+func (r *TerminalRender) RenderMap(data map[string]interface{}) {
 	fmt.Print("\n")
 	for name, value := range data {
 		if stringValue, ok := value.(string); ok {
@@ -40,7 +48,7 @@ func RenderMap(data map[string]interface{}) {
 	fmt.Print("\n")
 }
 
-func RenderDetailed(tasks *task.Task) {
+func (r *TerminalRender) RenderDetailed(tasks *task.Task) {
 	fmt.Print("\n")
 	fmt.Printf("ID: %d\n", tasks.ID)
 	fmt.Printf("Название: %s\n", tasks.Title)

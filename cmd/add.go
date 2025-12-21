@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"todo_cli/internal/manager"
-	"todo_cli/internal/storage"
 
 	"github.com/spf13/cobra"
 )
@@ -25,9 +23,6 @@ var addCmd = &cobra.Command{
 		cobra.MaximumNArgs(2),
 	),
 	Run: func(cmd *cobra.Command, args []string) {
-		store := &storage.FileStorage{}
-		filter := &manager.FilterTasks{}
-		mgr := manager.NewManager(store, filter)
 		if len(args[0]) == 0 {
 			fmt.Print("укажите корректные данные для заголовка или описания задачи\n")
 			return
@@ -44,7 +39,7 @@ var addCmd = &cobra.Command{
 			fmt.Printf("%v\n", err)
 			return
 		}
-		fmt.Printf("Задача #%d добавлена успешно\n", idTask)
+		fmt.Printf("Задача #%d добавлена успешно\n", *idTask)
 	},
 }
 

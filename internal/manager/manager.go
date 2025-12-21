@@ -8,7 +8,8 @@ import (
 
 type Storage interface {
 	Save(tasks []*task.Task, newFileName *string) error
-	Load() ([]*task.Task, error)
+	Load(differentFileName *string) ([]*task.Task, error)
+	Clear(differentFileName *string) error
 }
 
 type ManagerTasks interface {
@@ -27,13 +28,15 @@ type ManagerTasks interface {
 type Manager struct {
 	store  Storage
 	filter Filter
+	render render.Render
 }
 
 // конструктор
-func NewManager(s Storage, f Filter) *Manager {
+func NewManager(s Storage, f Filter, r render.Render) *Manager {
 	return &Manager{
 		store:  s,
 		filter: f,
+		render: r,
 	}
 }
 
@@ -72,7 +75,7 @@ func editTask(m *Manager, tasks []*task.Task, id int, data map[string]string) (*
 
 func (m *Manager) Create(data map[string]string) (*int, error) {
 	var idTask int = 0
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при создании: %w", err)
 	}
@@ -90,7 +93,7 @@ func (m *Manager) Create(data map[string]string) (*int, error) {
 		}
 		tasks = append(tasks, newTask)
 		m.store.Save(tasks, nil)
-		render.RenderDetailed(newTask)
+		m.render.RenderDetailed(newTask)
 		return &idTask, nil
 	}
 	return nil, fmt.Errorf("получены некорректные данные при создании задачи: %v", data)
@@ -98,7 +101,7 @@ func (m *Manager) Create(data map[string]string) (*int, error) {
 
 func (m *Manager) Start(id int) error {
 	data := map[string]string{"status": task.StatusProgress.String()}
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
@@ -106,7 +109,7 @@ func (m *Manager) Start(id int) error {
 	if err != nil {
 		return fmt.Errorf("не удалось создать задачу: %w", err)
 	}
-	render.RenderDetailed(tasks[*indexTask])
+	m.render.RenderDetailed(tasks[*indexTask])
 	return nil
 }
 
@@ -115,7 +118,7 @@ func (m *Manager) Start(id int) error {
 // Менеджер: [Manager](#Manager)
 func (m *Manager) Complete(id int) error {
 	data := map[string]string{"status": task.StatusCompleted.String()}
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
@@ -123,12 +126,12 @@ func (m *Manager) Complete(id int) error {
 	if err != nil {
 		return fmt.Errorf("не удалось завершить задачу: %w", err)
 	}
-	render.RenderDetailed(tasks[*indexTask])
+	m.render.RenderDetailed(tasks[*indexTask])
 	return nil
 }
 
 func (m *Manager) Edit(id int, data map[string]string) error {
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
@@ -136,12 +139,12 @@ func (m *Manager) Edit(id int, data map[string]string) error {
 	if err != nil {
 		return fmt.Errorf("не удалось отредактировать задачу: %w", err)
 	}
-	render.RenderDetailed(tasks[*indexTask])
+	m.render.RenderDetailed(tasks[*indexTask])
 	return nil
 }
 
 func (m *Manager) Delete(id int) error {
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
@@ -165,7 +168,7 @@ func (m *Manager) Delete(id int) error {
 }
 
 func (m *Manager) Show(id int) error {
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
@@ -173,17 +176,17 @@ func (m *Manager) Show(id int) error {
 	if indexTask == nil {
 		return fmt.Errorf("не найдена задача с #%d", id)
 	}
-	render.RenderDetailed(tasks[*indexTask])
+	m.render.RenderDetailed(tasks[*indexTask])
 	return nil
 }
 
 func (m *Manager) List(status string) error {
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
 	if status == "all" {
-		render.RenderList(tasks)
+		m.render.RenderList(tasks)
 	} else {
 		if !task.Status(status).Valid() {
 			return fmt.Errorf("передан некорректный статус для фильтрации: %s", status)
@@ -192,30 +195,30 @@ func (m *Manager) List(status string) error {
 		if err != nil {
 			return fmt.Errorf("ошибка при фильтрации задач: %w", err)
 		}
-		render.RenderList(tasksFiltered)
+		m.render.RenderList(tasksFiltered)
 	}
 	return nil
 }
 
 func (m *Manager) Stats() error {
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
 	data := m.filter.GetStatsTasksByStatus(tasks)
-	render.RenderMap(data)
+	m.render.RenderMap(data)
 	return nil
 }
 
 func (m *Manager) Search(word string) error {
-	tasks, err := m.store.Load()
+	tasks, err := m.store.Load(nil)
 	if err != nil {
 		return fmt.Errorf("ошибка при получении: %w", err)
 	}
 	foundTasks := m.filter.GetTasksBySearchWord(tasks, word)
 
 	if len(foundTasks) >= 1 {
-		render.RenderList(foundTasks)
+		m.render.RenderList(foundTasks)
 	} else {
 		return fmt.Errorf("задачи по фразе %s - не найдены", word)
 	}

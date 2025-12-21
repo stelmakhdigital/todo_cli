@@ -3,8 +3,6 @@ package cmd
 import (
 	"fmt"
 	"strconv"
-	"todo_cli/internal/manager"
-	"todo_cli/internal/storage"
 
 	"github.com/spf13/cobra"
 )
@@ -21,9 +19,6 @@ var startCmd = &cobra.Command{
   todo start 15
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		store := &storage.FileStorage{}
-		filter := &manager.FilterTasks{}
-		mgr := manager.NewManager(store, filter)
 		if len(args) < 1 {
 			fmt.Print("не передан ID задачи\n")
 			return
