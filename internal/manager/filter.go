@@ -6,6 +6,7 @@ import (
 	"todo_cli/internal/task"
 )
 
+// Filter определяет методы для фильтрации, поиска и получения статистики задач.
 type Filter interface {
 	GetIndexByID(tasks []*task.Task, id int) *int
 	GetTasksByStatus(tasks []*task.Task, status task.Status) ([]*task.Task, error)
@@ -15,6 +16,8 @@ type Filter interface {
 
 type FilterTasks struct{}
 
+// GetIndexByID возвращает указатель на индекс задачи в слайсе по её ID.
+// Возвращает nil, если задача с указанным ID не найдена.
 func (f *FilterTasks) GetIndexByID(tasks []*task.Task, id int) *int {
 	for index, value := range tasks {
 		if value.ID == id {
@@ -24,6 +27,8 @@ func (f *FilterTasks) GetIndexByID(tasks []*task.Task, id int) *int {
 	return nil
 }
 
+// GetTasksByStatus возвращает новый слайс задач, отфильтрованных по заданному статусу.
+// Возвращает ошибку task.ErrInvalidStatus, если переданный статус невалиден.
 func (f *FilterTasks) GetTasksByStatus(tasks []*task.Task, status task.Status) ([]*task.Task, error) {
 	if !task.Status(status).Valid() {
 		return nil, fmt.Errorf("ошибка валидации (%w): %s", task.ErrInvalidStatus, status)
@@ -37,6 +42,9 @@ func (f *FilterTasks) GetTasksByStatus(tasks []*task.Task, status task.Status) (
 	return filteredTasks, nil
 }
 
+// GetStatsTasksByStatus возвращает статистику задач, сгруппированных по статусам.
+// Метод подсчитывает общее количество задач и количество задач в каждом статусе:
+// Pending (ожидает), Progress (в работе), Completed (выполнено).
 func (f *FilterTasks) GetStatsTasksByStatus(tasks []*task.Task) map[string]interface{} {
 	var allTask, completed, progress, pending int
 	allTask = len(tasks)
@@ -60,6 +68,8 @@ func (f *FilterTasks) GetStatsTasksByStatus(tasks []*task.Task) map[string]inter
 	return data
 }
 
+// GetTasksBySearchWord возвращает задачи, содержащие указанное слово в названии или описании.
+// Поиск выполняется без учёта регистра символов.
 func (f *FilterTasks) GetTasksBySearchWord(tasks []*task.Task, word string) []*task.Task {
 	foundTasks := make([]*task.Task, 0, len(tasks))
 	word = strings.ToLower(word)
