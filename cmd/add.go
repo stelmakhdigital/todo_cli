@@ -28,12 +28,17 @@ var addCmd = &cobra.Command{
 			return
 		}
 		title := args[0]
-		data := make(map[string]string, 2)
-		data["title"] = title
-		if len(args[0]) > 1 {
-			description := args[1]
-			data["description"] = description
+		description := ""
+
+		if len(args) > 1 {
+			description = args[1]
 		}
+
+		data := map[string]string{
+			"title":       title,
+			"description": description,
+		}
+
 		idTask, err := mgr.Create(data)
 		if err != nil {
 			fmt.Printf("%v\n", err)

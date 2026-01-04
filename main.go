@@ -10,5 +10,7 @@ var (
 )
 
 func main() {
+	cmd.Version = version
+	cmd.BuildDate = date
 	cmd.Execute()
 }
