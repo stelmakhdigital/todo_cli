@@ -111,3 +111,55 @@ go test -cover ./...
 go test -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out
 ```
+
+## Разработка
+
+При разработке нужно включить git-hooks для автоматизации запуска тестов, проверки кода и других подобных задач
+
+```bash
+brew install lefthook
+```
+
+Установить необходимые зависимости 
+
+```bash
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install golang.org/x/tools/cmd/goimports@latest
+```
+
+Обновить хуки после изменения конфига
+
+```bash
+lefthook install -f
+```
+
+Проверка конфигурационного файла `lefthook.yml`
+
+```bash
+lefthook dump
+```
+
+Запуск хуков
+
+```bash
+lefthook run pre-commit
+lefthook run pre-push
+```
+
+Запуск конкретной команды 
+
+```bash
+lefthook run pre-commit --commands="lint"
+```
+
+Пропустить все хуки
+
+```bash
+LEFTHOOK=0 git commit -m "message"
+```
+
+## Сборка проекта в бинарник
+
+```bash
+go build -o bin/todo -ldflags="-s -w -X main.version=0.0.1 -X main.date=$(date -u +%Y-%m-%d_%H:%M:%S)" -trimpath
+```

@@ -19,7 +19,7 @@ pre-commit:
         fi
     lint:
       glob: "*.go"
-      run: 
+      run: |
         if command -v golangci-lint &> /dev/null; then
           golangci-lint run --fix
         else
