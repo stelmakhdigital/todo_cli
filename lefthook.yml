@@ -1,0 +1,55 @@
+pre-commit:
+  parallel: true
+  
+  skip:
+    - merge
+    - rebase
+  
+  commands:
+    fmt:
+      glob: "*.go"
+      run: gofmt -w {staged_files}
+    imports:
+      glob: "*.go"
+      run: |
+        if command -v goimports &> /dev/null; then
+          goimports -w {staged_files}
+        else
+          echo "goimports не установлен - пропускаем"
+        fi
+    lint:
+      glob: "*.go"
+      run: |
+        if command -v golangci-lint &> /dev/null; then
+          golangci-lint run --fix
+        else
+          echo "golangci-lint не установлен - пропускаем"
+        fi
+      fail_text: |
+        Линтер нашёл проблемы. Исправьте их или используйте:
+        LEFTHOOK_EXCLUDE=lint git commit -m "message"
+
+
+pre-push:
+  parallel: true
+  commands:
+    test:
+      run: go test -cover -race ./...
+      fail_text: |
+        Тесты завершились с ошибкой. Исправьте их или используйте:
+        LEFTHOOK_EXCLUDE=test git push
+
+
+commit-msg:
+  commands:
+    commitlint:
+      run: |
+        test -z "$(grep -E '^(feat|fix|docs|style|refactor|test|chore|update):' {1})" && \
+        echo "Коммит должен начинаться с тега (feat|fix|docs|...)" && exit 1 || exit 0
+
+
+post-checkout:
+  commands:
+    # Установка зависимостей после checkout
+    deps:
+      run: go mod download
