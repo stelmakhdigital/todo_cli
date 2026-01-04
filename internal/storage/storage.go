@@ -60,7 +60,7 @@ func (fs *FileStorage) Load(differentFileName *string) ([]*task.Task, error) {
 	if err != nil {
 		return nil, err
 	}
-	stringToTasks, err := os.ReadFile(fileName)
+	stringToTasks, err := os.ReadFile(choiceNameFile)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось загрузить задачи: %w", err)
 	}
