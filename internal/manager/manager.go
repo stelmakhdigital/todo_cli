@@ -40,6 +40,8 @@ func NewManager(s Storage, f Filter, r render.Render) *Manager {
 	}
 }
 
+// hasKeys проверяет наличие всех указанных ключей в карте data.
+// Возвращает true, если все ключи присутствуют, иначе false.
 func hasKeys(data map[string]string, keys ...string) bool {
 	for _, key := range keys {
 		if _, ok := data[key]; !ok {
@@ -49,6 +51,9 @@ func hasKeys(data map[string]string, keys ...string) bool {
 	return true
 }
 
+// editTask изменяет поля задачи по её ID и сохраняет изменения в хранилище.
+// Принимает менеджер, список задач, ID задачи и карту с новыми данными (title, description, status).
+// Возвращает индекс изменённой задачи или ошибку, если задача не найдена или данные невалидны.
 func editTask(m *Manager, tasks []*task.Task, id int, data map[string]string) (*int, error) {
 	indexTask := m.filter.GetIndexByID(tasks, id)
 	if indexTask == nil {
@@ -73,6 +78,11 @@ func editTask(m *Manager, tasks []*task.Task, id int, data map[string]string) (*
 	return indexTask, nil
 }
 
+// Create создаёт новую задачу со статусом "pending".
+// Принимает карту data с обязательными ключами "title" и "description".
+// Автоматически назначает новый уникальный ID (максимальный существующий + 1).
+// Сохраняет задачу в хранилище и выводит детальную информацию.
+// Возвращает указатель на ID созданной задачи или ошибку при невалидных данных.
 func (m *Manager) Create(data map[string]string) (*int, error) {
 	var idTask int = 0
 	tasks, err := m.store.Load(nil)
@@ -99,6 +109,10 @@ func (m *Manager) Create(data map[string]string) (*int, error) {
 	return nil, fmt.Errorf("получены некорректные данные при создании задачи: %v", data)
 }
 
+// Start переводит задачу в статус "in_progress" (в работе).
+// Находит задачу по ID, изменяет её статус и сохраняет изменения.
+// Выводит детальную информацию об обновлённой задаче.
+// Возвращает ошибку, если задача не найдена или произошла ошибка при сохранении.
 func (m *Manager) Start(id int) error {
 	data := map[string]string{"status": task.StatusProgress.String()}
 	tasks, err := m.store.Load(nil)
@@ -113,9 +127,10 @@ func (m *Manager) Start(id int) error {
 	return nil
 }
 
-// Complete - реализует изменение статуса через внутреннюю функцию [changeStatus](#changeStatus)
-//
-// Менеджер: [Manager](#Manager)
+// Complete переводит задачу в статус "completed" (выполнена).
+// Находит задачу по ID, изменяет её статус на завершённый и сохраняет изменения.
+// Выводит детальную информацию об обновлённой задаче.
+// Возвращает ошибку, если задача не найдена или произошла ошибка при сохранении.
 func (m *Manager) Complete(id int) error {
 	data := map[string]string{"status": task.StatusCompleted.String()}
 	tasks, err := m.store.Load(nil)
@@ -130,6 +145,11 @@ func (m *Manager) Complete(id int) error {
 	return nil
 }
 
+// Edit изменяет данные существующей задачи.
+// Принимает ID задачи и карту data с новыми значениями (title, description, status).
+// Можно изменять как одно поле, так и несколько одновременно.
+// Выводит детальную информацию об обновлённой задаче.
+// Возвращает ошибку, если задача не найдена, статус невалиден или ошибка при сохранении.
 func (m *Manager) Edit(id int, data map[string]string) error {
 	tasks, err := m.store.Load(nil)
 	if err != nil {
@@ -143,6 +163,9 @@ func (m *Manager) Edit(id int, data map[string]string) error {
 	return nil
 }
 
+// Delete удаляет задачу по её ID.
+// Находит задачу в списке, удаляет её из слайса и сохраняет изменения в хранилище.
+// Возвращает ошибку, если задача не найдена или произошла ошибка при сохранении.
 func (m *Manager) Delete(id int) error {
 	tasks, err := m.store.Load(nil)
 	if err != nil {
@@ -167,6 +190,9 @@ func (m *Manager) Delete(id int) error {
 	return nil
 }
 
+// Show выводит детальную информацию о конкретной задаче.
+// Загружает задачи из хранилища, находит задачу по ID и отображает её данные.
+// Возвращает ошибку, если задача не найдена или произошла ошибка при загрузке.
 func (m *Manager) Show(id int) error {
 	tasks, err := m.store.Load(nil)
 	if err != nil {
@@ -180,6 +206,10 @@ func (m *Manager) Show(id int) error {
 	return nil
 }
 
+// List выводит список задач с опциональной фильтрацией по статусу.
+// Если status = "all", выводит все задачи без фильтрации.
+// Иначе фильтрует задачи по указанному статусу (pending, in_progress, completed).
+// Возвращает ошибку, если передан некорректный статус или ошибка при загрузке.
 func (m *Manager) List(status string) error {
 	tasks, err := m.store.Load(nil)
 	if err != nil {
@@ -200,6 +230,10 @@ func (m *Manager) List(status string) error {
 	return nil
 }
 
+// Stats выводит статистику по задачам.
+// Собирает и отображает количество задач по каждому статусу и общее количество.
+// Формат вывода: всего задач, выполнено, в работе, ожидает.
+// Возвращает ошибку, если произошла ошибка при загрузке задач.
 func (m *Manager) Stats() error {
 	tasks, err := m.store.Load(nil)
 	if err != nil {
@@ -210,6 +244,10 @@ func (m *Manager) Stats() error {
 	return nil
 }
 
+// Search выполняет поиск задач по ключевому слову.
+// Ищет совпадения в заголовке и описании задач (регистронезависимый поиск).
+// Выводит список найденных задач.
+// Возвращает ошибку, если задачи не найдены или произошла ошибка при загрузке.
 func (m *Manager) Search(word string) error {
 	tasks, err := m.store.Load(nil)
 	if err != nil {

@@ -15,6 +15,10 @@ type Render interface {
 
 type TerminalRender struct{}
 
+// RenderList выводит список задач в виде таблицы в терминал.
+// Таблица содержит колонки: ID, Название, Статус, Создана.
+// Ширина колонки "Название" автоматически подстраивается под самое длинное название.
+// Даты отображаются в формате DD.MM.YYYY.
 func (r *TerminalRender) RenderList(tasks []*task.Task) {
 	var columnMax int = 0
 	for _, value := range tasks {
@@ -35,6 +39,9 @@ func (r *TerminalRender) RenderList(tasks []*task.Task) {
 	fmt.Print("\n")
 }
 
+// RenderMap выводит данные из карты в формате "ключ: значение".
+// Поддерживает типы значений: string и int.
+// Используется для вывода статистики и других агрегированных данных.
 func (r *TerminalRender) RenderMap(data map[string]interface{}) {
 	fmt.Print("\n")
 	for name, value := range data {
@@ -48,6 +55,9 @@ func (r *TerminalRender) RenderMap(data map[string]interface{}) {
 	fmt.Print("\n")
 }
 
+// RenderDetailed выводит детальную информацию об одной задаче.
+// Отображает: ID, название, описание, статус и дату создания.
+// Дата создания показывается в формате DD.MM.YYYY HH:MM.
 func (r *TerminalRender) RenderDetailed(tasks *task.Task) {
 	fmt.Print("\n")
 	fmt.Printf("ID: %d\n", tasks.ID)

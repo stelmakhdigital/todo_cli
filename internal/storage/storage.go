@@ -23,8 +23,13 @@ const (
 	fileMode644 = owner | group | other // 0644
 )
 
+// FileStorage реализует интерфейс Storage для работы с файловой системой.
+// Сохраняет и загружает задачи в формате JSON.
 type FileStorage struct{}
 
+// checkExistsFile проверяет существование файла.
+// Если файл не существует, создаёт его с пустым массивом задач "[]".
+// Возвращает ошибку при проблемах с созданием файла.
 func checkExistsFile(fileName string) error {
 	_, err := os.Stat(fileName)
 	if os.IsNotExist(err) {
@@ -34,6 +39,11 @@ func checkExistsFile(fileName string) error {
 	return nil
 }
 
+// Save сохраняет список задач в JSON-файл.
+// Если newFileName = nil, использует дефолтное имя файла "tasks.json".
+// Если newFileName указан, сохраняет в файл с указанным именем.
+// Автоматически создаёт файл, если он не существует.
+// Возвращает ошибку при проблемах с сериализацией или записью файла.
 func (fs *FileStorage) Save(tasks []*task.Task, newFileName *string) error {
 	choiceNameFile := fileName
 	if newFileName != nil {
@@ -50,6 +60,11 @@ func (fs *FileStorage) Save(tasks []*task.Task, newFileName *string) error {
 	return os.WriteFile(choiceNameFile, taskToString, fileMode644)
 }
 
+// Load загружает список задач из JSON-файла.
+// Если differentFileName = nil, загружает из дефолтного файла "tasks.json".
+// Если differentFileName указан, загружает из файла с указанным именем.
+// Автоматически создаёт файл с пустым списком, если он не существует.
+// Возвращает список задач или ошибку при проблемах с чтением или десериализацией.
 func (fs *FileStorage) Load(differentFileName *string) ([]*task.Task, error) {
 	var tasks []*task.Task
 	choiceNameFile := fileName
@@ -71,6 +86,10 @@ func (fs *FileStorage) Load(differentFileName *string) ([]*task.Task, error) {
 	return tasks, nil
 }
 
+// Clear удаляет файл с задачами.
+// Если differentFileName = nil, удаляет дефолтный файл "tasks.json".
+// Если differentFileName указан, удаляет файл с указанным именем.
+// Возвращает ошибку, если файл не существует или не может быть удалён.
 func (fs *FileStorage) Clear(differentFileName *string) error {
 	choiceNameFile := fileName
 	if differentFileName != nil {
