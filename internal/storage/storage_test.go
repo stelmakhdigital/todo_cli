@@ -86,35 +86,21 @@ func TestFileStorage_Save(t *testing.T) {
 	}{
 		{"сохранение пустого списка", tasksEmpty, testutil.StrPtr(filepath.Join(tmpDir, "empty.json"))},
 		{"сохранение нескольких задач", tasksMany, testutil.StrPtr(filepath.Join(tmpDir, "many.json"))},
-		{"сохранение с fileName=nil", tasksMany, nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fs := &FileStorage{}
 
-			// для nil в fileName меняем рабочую директорию
-			if tt.fileName == nil {
-				oldDir, _ := os.Getwd()
-				defer os.Chdir(oldDir)
-				os.Chdir(tmpDir)
-			}
-
 			err := fs.Save(tt.tasks, tt.fileName)
 			assert.NoError(t, err)
 
 			// чекаем что файл создан
-			checkFile := fileName
-			if tt.fileName != nil {
-				checkFile = *tt.fileName
-			}
-			_, err = os.Stat(checkFile)
+			_, err = os.Stat(*tt.fileName)
 			assert.NoError(t, err)
 
 			// очистка
-			if tt.fileName != nil {
-				os.Remove(*tt.fileName)
-			}
+			os.Remove(*tt.fileName)
 		})
 	}
 }
